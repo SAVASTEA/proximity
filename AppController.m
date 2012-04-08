@@ -1,6 +1,5 @@
 #import "AppController.h"
 
-
 @implementation AppController
 
 
@@ -9,28 +8,28 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-	[self stopMonitoring];
+		[self stopMonitoring];
 }
 
 - (void)awakeFromNib
 {
-	NSBundle *bundle = [NSBundle mainBundle];
-	inRangeImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"inRange" ofType: @"png"]];
-	inRangeAltImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"inRangeAlt" ofType: @"png"]];	
-	outOfRangeImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"outRange" ofType: @"png"]];
-	outOfRangeAltImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"outOfRange" ofType: @"png"]];	
-
-	priorStatus = OutOfRange;
-	
-	[self createMenuBar];
-	[self userDefaultsLoad];
+		NSBundle *bundle = [NSBundle mainBundle];
+		inRangeImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"btoothcheck" ofType: @"png"]];
+		inRangeAltImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"btoothcheck" ofType: @"png"]];	
+		outOfRangeImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"btooth" ofType: @"png"]];
+		outOfRangeAltImage = [[NSImage alloc] initWithContentsOfFile: [bundle pathForResource: @"btooth" ofType: @"png"]];	
+		
+		priorStatus = OutOfRange;
+		
+		[self createMenuBar];
+		[self userDefaultsLoad];
 }
 
 - (void)windowWillClose:(NSNotification *)aNotification
 {
-	[self userDefaultsSave];
-	[self stopMonitoring];
-	[self startMonitoring];
+		[self userDefaultsSave];
+		[self stopMonitoring];
+		[self startMonitoring];
 }
 
 
@@ -39,251 +38,275 @@
 
 - (void)createMenuBar
 {
-	NSMenu *myMenu;
-	NSMenuItem *menuItem;
-	 
-	// Menu for status bar item
-	myMenu = [[NSMenu alloc] init];
-	
-	// Prefences menu item
-	menuItem = [myMenu addItemWithTitle:@"Preferences" action:@selector(showWindow:) keyEquivalent:@""];
-	[menuItem setTarget:self];
-	
-	// Quit menu item
-	[myMenu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@""];
-	
-	// Space on status bar
-	statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
-	[statusItem retain];
-	
-	// Attributes of space on status bar
-	[statusItem setHighlightMode:YES];
-	[statusItem setMenu:myMenu];
-
-	[self menuIconOutOfRange];	
+		NSMenu *myMenu;
+		NSMenuItem *menuItem;
+		
+		// Menu for status bar item
+		myMenu = [[NSMenu alloc] init];
+		
+		// RSSI reading for selected device in menubar
+		menuItem = [myMenu addItemWithTitle:@"RSSI: Waiting…" action:nil keyEquivalent:@""];
+		[menuItem setTag:2];
+		
+		// Prefences menu item
+		menuItem = [myMenu addItemWithTitle:@"Preferences" action:@selector(showWindow:) keyEquivalent:@""];
+		
+		[menuItem setTarget:self];
+		
+		// Quit menu item
+		[myMenu addItemWithTitle:@"Quit" action:@selector(terminate:) keyEquivalent:@""];
+		
+		// Space on status bar
+		statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
+		[statusItem retain];
+		
+		// Attributes of space on status bar
+		[statusItem setHighlightMode:YES];
+		[statusItem setMenu:myMenu];
+		
+		[self menuIconOutOfRange];	
 }
 
 - (void)handleTimer:(NSTimer *)theTimer
 {
-	if( [self isInRange] )
-	{
-		if( priorStatus == OutOfRange )
+		if( [self isInRange] )
 		{
-			priorStatus = InRange;
-			
-			[self menuIconInRange];
-			[self runInRangeScript];
+				if( priorStatus == OutOfRange )
+				{
+						priorStatus = InRange;
+						
+						[self menuIconInRange];
+						[self runInRangeScript];
+				}
 		}
-	}
-	else
-	{
-		if( priorStatus == InRange )
+		else
 		{
-			priorStatus = OutOfRange;
-			
-			[self menuIconOutOfRange];
-			[self runOutOfRangeScript];
+				if( priorStatus == InRange )
+				{
+						priorStatus = OutOfRange;
+						
+						[self menuIconOutOfRange];
+						[self runOutOfRangeScript];
+				}
 		}
-	}
-	
-	[self startMonitoring];
+		
+		[self startMonitoring];
 }
 
 - (BOOL)isInRange
 {
-	if( device && [device remoteNameRequest:nil] == kIOReturnSuccess )
-		return true;
-	
-	return false;
+//		IOBluetoothHostController *hci = [IOBluetoothHostController defaultController];
+		
+    [device openConnection];
+//    getRSSI *rssi = [[getRSSI alloc] init];
+//    [hci setDelegate:rssi];
+//		NSLog(@"%d",[device rawRSSI]);
+		NSMenuItem *menuitem = [[statusItem menu] itemWithTag:2];
+		[menuitem setTitle:[NSString stringWithFormat:@"RSSI: %d",[device rawRSSI]]];
+		
+		if( device && [device RSSI] == 0) {
+				return true;
+		}
+
+		// poll three times over 6 seconds to make sure we're actually gone
+		// from https://github.com/dxxb/proximity/
+		int repeat_count = 3;
+    do {
+        if( device && [device RSSI] == 0 )
+            return true;
+        sleep(2);
+    } while(--repeat_count);
+		
+		return false;
 }
 
 - (void)menuIconInRange
 {	
-	[statusItem setImage:inRangeImage];
-	[statusItem setAlternateImage:inRangeAltImage];
+		[statusItem setImage:inRangeImage];
+		[statusItem setAlternateImage:inRangeAltImage];
 		
-	//[statusItem	setTitle:@"O"];
+		//[statusItem	setTitle:@"O"];
 }
 
 - (void)menuIconOutOfRange
 {
-	[statusItem setImage:outOfRangeImage];
-	[statusItem setAlternateImage:outOfRangeAltImage];
-
-//	[statusItem setTitle:@"X"];
+		[statusItem setImage:outOfRangeImage];
+		[statusItem setAlternateImage:outOfRangeAltImage];
+		
+		//	[statusItem setTitle:@"X"];
 }
 
 - (BOOL)newVersionAvailable
 {
-	NSURL *url = [NSURL URLWithString:@"http://reduxcomputing.com/download/Proximity.plist"];
-	NSDictionary *dict = [NSDictionary dictionaryWithContentsOfURL:url];
-	NSArray *version = [[dict valueForKey:@"version"] componentsSeparatedByString:@"."];
-	
-	int newVersionMajor = [[version objectAtIndex:0] intValue];
-	int newVersionMinor = [[version objectAtIndex:1] intValue];
-	
-	if( thisVersionMajor < newVersionMajor || thisVersionMinor < newVersionMinor )
-		return YES;
-	
-	return NO;
+		NSURL *url = [NSURL URLWithString:@"http://reduxcomputing.com/download/Proximity.plist"];
+		NSDictionary *dict = [NSDictionary dictionaryWithContentsOfURL:url];
+		NSArray *version = [[dict valueForKey:@"version"] componentsSeparatedByString:@"."];
+		
+		int newVersionMajor = [[version objectAtIndex:0] intValue];
+		int newVersionMinor = [[version objectAtIndex:1] intValue];
+		
+		if( thisVersionMajor < newVersionMajor || thisVersionMinor < newVersionMinor )
+				return YES;
+		
+		return NO;
 }
 
 - (void)runInRangeScript
 {
-	NSAppleScript *script;
-	NSDictionary *errDict;
-	NSAppleEventDescriptor *ae;
-	
-	script = [[NSAppleScript alloc]
-			  initWithContentsOfURL:[NSURL fileURLWithPath:[inRangeScriptPath stringValue]]
-			  error:&errDict];
-	ae = [script executeAndReturnError:&errDict];		
+		NSAppleScript *script;
+		NSDictionary *errDict;
+		NSAppleEventDescriptor *ae;
+		
+		script = [[NSAppleScript alloc]
+							initWithContentsOfURL:[NSURL fileURLWithPath:[[inRangeScriptPath stringValue] stringByExpandingTildeInPath]]
+							error:&errDict];
+		ae = [script executeAndReturnError:&errDict];
 }
 
 - (void)runOutOfRangeScript
 {
-	NSAppleScript *script;
-	NSDictionary *errDict;
-	NSAppleEventDescriptor *ae;
-	
-	script = [[NSAppleScript alloc]
-			  initWithContentsOfURL:[NSURL fileURLWithPath:[outOfRangeScriptPath stringValue]] 
-			  error:&errDict];
-	ae = [script executeAndReturnError:&errDict];	
+		NSAppleScript *script;
+		NSDictionary *errDict;
+		NSAppleEventDescriptor *ae;
+		
+		script = [[NSAppleScript alloc]
+							initWithContentsOfURL:[NSURL fileURLWithPath:[[outOfRangeScriptPath stringValue] stringByExpandingTildeInPath]] 
+							error:&errDict];
+		ae = [script executeAndReturnError:&errDict];	
 }
 
 - (void)startMonitoring
 {
-	if( [monitoringEnabled state] == NSOnState )
-	{
-		timer = [NSTimer scheduledTimerWithTimeInterval:[timerInterval intValue]
-												 target:self
-											   selector:@selector(handleTimer:)
-											   userInfo:nil
-												repeats:NO];
-		[timer retain];
-	}		
+		if( [monitoringEnabled state] == NSOnState )
+		{
+				timer = [NSTimer scheduledTimerWithTimeInterval:[timerInterval intValue]
+																								 target:self
+																							 selector:@selector(handleTimer:)
+																							 userInfo:nil
+																								repeats:NO];
+				[timer retain];
+		}		
 }
 
 - (void)stopMonitoring
 {
-	[timer invalidate];
+		[timer invalidate];
 }
 
 - (void)userDefaultsLoad
 {
-	NSUserDefaults *defaults;
-	NSData *deviceAsData;
-	
-	defaults = [NSUserDefaults standardUserDefaults];
-	
-	// Device
-	deviceAsData = [defaults objectForKey:@"device"];
-	if( [deviceAsData length] > 0 )
-	{
-		device = [NSKeyedUnarchiver unarchiveObjectWithData:deviceAsData];
-		[device retain];
-		[deviceName setStringValue:[NSString stringWithFormat:@"%@ (%@)",
-									[device getName], [device getAddressString]]];
+		NSUserDefaults *defaults;
+		NSData *deviceAsData;
 		
-		if( [self isInRange] )
-		{			
-			priorStatus = InRange;
-			[self menuIconInRange];
-		}
-		else
-		{
-			priorStatus = OutOfRange;
-			[self menuIconOutOfRange];
-		}
-	}
-	
-	//Timer interval
-	if( [[defaults stringForKey:@"timerInterval"] length] > 0 )
-		[timerInterval setStringValue:[defaults stringForKey:@"timerInterval"]];
-	
-	// Out of range script path
-	if( [[defaults stringForKey:@"outOfRangeScriptPath"] length] > 0 )
-		[outOfRangeScriptPath setStringValue:[defaults stringForKey:@"outOfRangeScriptPath"]];
-	
-	// In range script path
-	if( [[defaults stringForKey:@"inRangeScriptPath"] length] > 0 )
-		[inRangeScriptPath setStringValue:[defaults stringForKey:@"inRangeScriptPath"]];
-	
-	// Check for updates on startup
-	BOOL updating = [defaults boolForKey:@"updating"];
-	if( updating ) {
-		[checkUpdatesOnStartup setState:NSOnState];
-		if( [self newVersionAvailable] )
-		{
-			if( NSRunAlertPanel( @"Proximity", @"A new version of Proximity is available for download.",
-								@"Close", @"Download", nil, nil ) == NSAlertAlternateReturn )
-			{
-				[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://reduxcomputing.com/proximity/"]];
-			}
-		}
-	}
-	
-	// Monitoring enabled
-	BOOL monitoring = [defaults boolForKey:@"enabled"];
-	if( monitoring ) {
-		[monitoringEnabled setState:NSOnState];
-		[self startMonitoring];
-	}
-	
-	// Run scripts on startup
-	BOOL startup = [defaults boolForKey:@"executeOnStartup"];
-	if( startup )
-	{
-		[runScriptsOnStartup setState:NSOnState];
+		defaults = [NSUserDefaults standardUserDefaults];
 		
-		if( monitoring )
+		// Device
+		deviceAsData = [defaults objectForKey:@"device"];
+		if( [deviceAsData length] > 0 )
 		{
-			if( [self isInRange] ) {
-				[self runInRangeScript];
-			} else {
-				[self runOutOfRangeScript];
-			}
+				device = [NSKeyedUnarchiver unarchiveObjectWithData:deviceAsData];
+				[device retain];
+				[deviceName setStringValue:[NSString stringWithFormat:@"%@ (%@)",
+																		[device name], [device addressString]]];
+				
+				if( [self isInRange] )
+				{			
+						priorStatus = InRange;
+						[self menuIconInRange];
+				}
+				else
+				{
+						priorStatus = OutOfRange;
+						[self menuIconOutOfRange];
+				}
 		}
-	}
-	
+		
+		//Timer interval
+		if( [[defaults stringForKey:@"timerInterval"] length] > 0 )
+				[timerInterval setStringValue:[defaults stringForKey:@"timerInterval"]];
+		
+		// Out of range script path
+		if( [[defaults stringForKey:@"outOfRangeScriptPath"] length] > 0 )
+				[outOfRangeScriptPath setStringValue:[defaults stringForKey:@"outOfRangeScriptPath"]];
+		
+		// In range script path
+		if( [[defaults stringForKey:@"inRangeScriptPath"] length] > 0 )
+				[inRangeScriptPath setStringValue:[defaults stringForKey:@"inRangeScriptPath"]];
+		
+		// Check for updates on startup
+		BOOL updating = [defaults boolForKey:@"updating"];
+		if( updating ) {
+				[checkUpdatesOnStartup setState:NSOnState];
+				if( [self newVersionAvailable] )
+				{
+						if( NSRunAlertPanel( @"Proximity", @"A new version of Proximity is available for download.",
+																@"Close", @"Download", nil, nil ) == NSAlertAlternateReturn )
+						{
+								[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://reduxcomputing.com/proximity/"]];
+						}
+				}
+		}
+		
+		// Monitoring enabled
+		BOOL monitoring = [defaults boolForKey:@"enabled"];
+		if( monitoring ) {
+				[monitoringEnabled setState:NSOnState];
+				[self startMonitoring];
+		}
+		
+		// Run scripts on startup
+		BOOL startup = [defaults boolForKey:@"executeOnStartup"];
+		if( startup )
+		{
+				[runScriptsOnStartup setState:NSOnState];
+				
+				if( monitoring )
+				{
+						if( [self isInRange] ) {
+								[self runInRangeScript];
+						} else {
+								[self runOutOfRangeScript];
+						}
+				}
+		}
+		
 }
 
 - (void)userDefaultsSave
 {
-	NSUserDefaults *defaults;
-	NSData *deviceAsData;
-	
-	defaults = [NSUserDefaults standardUserDefaults];
-	
-	// Monitoring enabled
-	BOOL monitoring = ( [monitoringEnabled state] == NSOnState ? TRUE : FALSE );
-	[defaults setBool:monitoring forKey:@"enabled"];
-	
-	// Update checking
-	BOOL updating = ( [checkUpdatesOnStartup state] == NSOnState ? TRUE : FALSE );
-	[defaults setBool:updating forKey:@"updating"];
-	
-	// Execute scripts on startup
-	BOOL startup = ( [runScriptsOnStartup state] == NSOnState ? TRUE : FALSE );
-	[defaults setBool:startup forKey:@"executeOnStartup"];
-	
-	// Timer interval
-	[defaults setObject:[timerInterval stringValue] forKey:@"timerInterval"];
-	
-	// In range script
-	[defaults setObject:[inRangeScriptPath stringValue] forKey:@"inRangeScriptPath"];
-
-	// Out of range script
-	[defaults setObject:[outOfRangeScriptPath stringValue] forKey:@"outOfRangeScriptPath"];
+		NSUserDefaults *defaults;
+		NSData *deviceAsData;
 		
-	// Device
-	if( device ) {
-		deviceAsData = [NSKeyedArchiver archivedDataWithRootObject:device];
-		[defaults setObject:deviceAsData forKey:@"device"];
-	}
-	
-	[defaults synchronize];
+		defaults = [NSUserDefaults standardUserDefaults];
+		
+		// Monitoring enabled
+		BOOL monitoring = ( [monitoringEnabled state] == NSOnState ? TRUE : FALSE );
+		[defaults setBool:monitoring forKey:@"enabled"];
+		
+		// Update checking
+		BOOL updating = ( [checkUpdatesOnStartup state] == NSOnState ? TRUE : FALSE );
+		[defaults setBool:updating forKey:@"updating"];
+		
+		// Execute scripts on startup
+		BOOL startup = ( [runScriptsOnStartup state] == NSOnState ? TRUE : FALSE );
+		[defaults setBool:startup forKey:@"executeOnStartup"];
+		
+		// Timer interval
+		[defaults setObject:[timerInterval stringValue] forKey:@"timerInterval"];
+		
+		// In range script
+		[defaults setObject:[inRangeScriptPath stringValue] forKey:@"inRangeScriptPath"];
+		
+		// Out of range script
+		[defaults setObject:[outOfRangeScriptPath stringValue] forKey:@"outOfRangeScriptPath"];
+		
+		// Device
+		if( device ) {
+				deviceAsData = [NSKeyedArchiver archivedDataWithRootObject:device];
+				[defaults setObject:deviceAsData forKey:@"device"];
+		}
+		
+		[defaults synchronize];
 }
 
 
@@ -292,97 +315,97 @@
 
 - (IBAction)changeDevice:(id)sender
 {
-	IOBluetoothDeviceSelectorController *deviceSelector;
-	deviceSelector = [IOBluetoothDeviceSelectorController deviceSelector];
-	[deviceSelector runModal];
-	
-	NSArray *results;
-	results = [deviceSelector getResults];
-	
-	if( !results )
-		return;
-	
-	device = [results objectAtIndex:0];
-	[device retain];
-	
-	[deviceName setStringValue:[NSString stringWithFormat:@"%@ (%@)",
-								[device getName],
-								[device getAddressString]]];    
+		IOBluetoothDeviceSelectorController *deviceSelector;
+		deviceSelector = [IOBluetoothDeviceSelectorController deviceSelector];
+		[deviceSelector runModal];
+		
+		NSArray *results;
+		results = [deviceSelector getResults];
+		
+		if( !results )
+				return;
+		
+		device = [results objectAtIndex:0];
+		[device retain];
+		
+		[deviceName setStringValue:[NSString stringWithFormat:@"%@ (%@)",
+																[device name],
+																[device addressString]]];    
 }
 
 - (IBAction)checkConnectivity:(id)sender
 {
-	[progressIndicator startAnimation:nil];
-	
-	if( [self isInRange] )
-	{
-		[progressIndicator stopAnimation:nil];
-		NSRunAlertPanel( @"Found", @"Device is powered on and in range", nil, nil, nil, nil );
-	}
-	else
-	{
-		[progressIndicator stopAnimation:nil];
-		NSRunAlertPanel( @"Not Found", @"Device is powered off or out of range", nil, nil, nil, nil );
-	}
+		[progressIndicator startAnimation:nil];
+		
+		if( [self isInRange] )
+		{
+				[progressIndicator stopAnimation:nil];
+				NSRunAlertPanel( @"Found", @"Device is powered on and in range", nil, nil, nil, nil );
+		}
+		else
+		{
+				[progressIndicator stopAnimation:nil];
+				NSRunAlertPanel( @"Not Found", @"Device is powered off or out of range", nil, nil, nil, nil );
+		}
 }
 
 - (IBAction)checkForUpdates:(id)sender
 {
-	if( [self newVersionAvailable] )
-	{
-		if( NSRunAlertPanel( @"Proximity", @"A new version of Proximity is available for download.",
-							@"Close", @"Download", nil, nil ) == NSAlertAlternateReturn )
+		if( [self newVersionAvailable] )
 		{
-			[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://reduxcomputing.com/proximity/"]];
+				if( NSRunAlertPanel( @"Proximity", @"A new version of Proximity is available for download.",
+														@"Close", @"Download", nil, nil ) == NSAlertAlternateReturn )
+				{
+						[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://reduxcomputing.com/proximity/"]];
+				}
 		}
-	}
-	else
-	{
-		NSRunAlertPanel( @"Proximity", @"You have the latest version.", @"Close", nil, nil, nil );
-	}
+		else
+		{
+				NSRunAlertPanel( @"Proximity", @"You have the latest version.", @"Close", nil, nil, nil );
+		}
 }
 
 - (IBAction)donate:(id)sender
 {
-	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://reduxcomputing.com/donate.php"]];
+		[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:@"http://reduxcomputing.com/donate.php"]];
 }
 
 - (IBAction)enableMonitoring:(id)sender
 {
-	// See windowWillClose: method
+		// See windowWillClose: method
 }
 
 - (IBAction)inRangeScriptChange:(id)sender
 {
-	NSOpenPanel *op = [NSOpenPanel openPanel];
-	[op runModalForDirectory:@"~" file:nil types:[NSArray arrayWithObject:@"scpt"]];
-	
-	NSArray *filenames = [op filenames];
-	[inRangeScriptPath setStringValue:[filenames objectAtIndex:0]];	
+		NSOpenPanel *op = [NSOpenPanel openPanel];
+		[op runModal];
+		
+		NSArray *filenames = [op URLs];
+		[inRangeScriptPath setStringValue:[filenames objectAtIndex:0]];	
 }
 
 - (IBAction)inRangeScriptClear:(id)sender
 {
-	[inRangeScriptPath setStringValue:@""];
+		[inRangeScriptPath setStringValue:@""];
 }
 
 - (IBAction)inRangeScriptTest:(id)sender
 {
-	[self runInRangeScript];
+		[self runInRangeScript];
 }
 
 - (IBAction)outOfRangeScriptChange:(id)sender
 {
-	NSOpenPanel *op = [NSOpenPanel openPanel];
-	[op runModalForDirectory:@"~" file:nil types:[NSArray arrayWithObject:@"scpt"]];
-	
-	NSArray *filenames = [op filenames];
-	[outOfRangeScriptPath setStringValue:[filenames objectAtIndex:0]];    
+		NSOpenPanel *op = [NSOpenPanel openPanel];
+		[op runModal];
+		
+		NSArray *filenames = [op URLs];
+		[outOfRangeScriptPath setStringValue:[filenames objectAtIndex:0]];    
 }
 
 - (IBAction)outOfRangeScriptClear:(id)sender
 {
-	[outOfRangeScriptPath setStringValue:@""];
+		[outOfRangeScriptPath setStringValue:@""];
 }
 
 - (IBAction)outOfRangeScriptTest:(id)sender
@@ -392,11 +415,10 @@
 
 - (void)showWindow:(id)sender
 {
-	[prefsWindow makeKeyAndOrderFront:self];
-	[prefsWindow center];
-	
-	[self stopMonitoring];
+		[prefsWindow makeKeyAndOrderFront:self];
+		[prefsWindow center];
+		
+		[self stopMonitoring];
 }
-
 
 @end

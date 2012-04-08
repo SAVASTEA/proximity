@@ -7,22 +7,22 @@ int thisVersionMajor = 1;
 int thisVersionMinor = 5;
 
 typedef enum _BPStatus {
-	InRange,
-	OutOfRange
+		InRange,
+		OutOfRange
 } BPStatus;
 
 @interface AppController : NSObject
 {
-	IOBluetoothDevice *device;
-	NSTimer *timer;
-	BPStatus priorStatus;
-	NSStatusItem *statusItem;
-	
-	NSImage *outOfRangeImage;
-	NSImage *outOfRangeAltImage;
-	NSImage *inRangeImage;
-	NSImage *inRangeAltImage;
-	
+		IOBluetoothDevice *device;
+		NSTimer *timer;
+		BPStatus priorStatus;
+		NSStatusItem *statusItem;
+		
+		NSImage *outOfRangeImage;
+		NSImage *outOfRangeAltImage;
+		NSImage *inRangeImage;
+		NSImage *inRangeAltImage;
+		
     IBOutlet id checkUpdatesOnStartup;
     IBOutlet id deviceName;
     IBOutlet id inRangeScriptPath;
@@ -32,6 +32,7 @@ typedef enum _BPStatus {
     IBOutlet id progressIndicator;
     IBOutlet id runScriptsOnStartup;
     IBOutlet id timerInterval;
+		
 }
 
 // AppController methods
@@ -45,7 +46,6 @@ typedef enum _BPStatus {
 - (void)runOutOfRangeScript;
 - (void)startMonitoring;
 - (void)stopMonitoring;
-
 
 // UI methods
 - (IBAction)changeDevice:(id)sender;

@@ -19,6 +19,8 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		939C6C3C15312B8A006CD4BF /* btooth.png in Resources */ = {isa = PBXBuildFile; fileRef = 939C6C3A15312B8A006CD4BF /* btooth.png */; };
+		939C6C3D15312B8A006CD4BF /* btoothcheck.png in Resources */ = {isa = PBXBuildFile; fileRef = 939C6C3B15312B8A006CD4BF /* btoothcheck.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +43,8 @@
 		32CA4F630368D1EE00C91783 /* Proximity_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Proximity_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* Proximity.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Proximity.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		939C6C3A15312B8A006CD4BF /* btooth.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = btooth.png; sourceTree = "<group>"; };
+		939C6C3B15312B8A006CD4BF /* btoothcheck.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = btoothcheck.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +120,8 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				939C6C3A15312B8A006CD4BF /* btooth.png */,
+				939C6C3B15312B8A006CD4BF /* btoothcheck.png */,
 				2EA9F55A0FC02F68007354EF /* AppIcon.icns */,
 				2E10CA810FBD09DA0059A159 /* inRange.png */,
 				2E10CA820FBD09DA0059A159 /* inRangeAlt.png */,
@@ -167,7 +173,11 @@
 			isa = PBXProject;
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Proximity" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 29B97314FDCFA39411CA2CEA /* Proximity */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -189,6 +199,8 @@
 				2E10CA870FBD09DA0059A159 /* outRange.png in Resources */,
 				2E10CA880FBD09DA0059A159 /* outRangeAlt.png in Resources */,
 				2EA9F55B0FC02F68007354EF /* AppIcon.icns in Resources */,
+				939C6C3C15312B8A006CD4BF /* btooth.png in Resources */,
+				939C6C3D15312B8A006CD4BF /* btoothcheck.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,6 +255,7 @@
 				GCC_PREFIX_HEADER = Proximity_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = Proximity;
 			};
 			name = Debug;
@@ -261,6 +274,7 @@
 				GCC_PREFIX_HEADER = Proximity_Prefix.pch;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = Proximity;
 			};
 			name = Release;
@@ -268,26 +282,26 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				SDKROOT = macosx10.4;
+				SDKROOT = macosx10.7;
 			};
 			name = Debug;
 		};
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = macosx10.4;
+				SDKROOT = macosx10.7;
 			};
 			name = Release;
 		};
